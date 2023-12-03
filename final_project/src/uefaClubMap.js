@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { geoPath, geoMercator } from "d3-geo";
 import { geoBounds, geoContains, forceSimulation, forceManyBody, forceCenter, forceCollide, select, quadtree } from "d3";
 import { Routes } from './routes'
-import yourImage from './top_5_football_leagues/french-ligue1/rc-lens.png'; 
+// import villarrealLogo from './top_5_football_leagues/la-liga/villarreal.png';
 
 
 

@@ -43,15 +43,12 @@ module.exports = {
                     options: {
                       limit: 8192, // Convert images < 8kb to base64 strings
                       name: '[name].[ext]',
-                      outputPath: 'images', // Output path for images (relative to the output directory)
+                      outputPath: 'images',
+                    //   outputPath: 'src', // Output path for images (relative to the output directory)
                     },
                   },
                 ],
               },
-            {
-                test: /\.(png|jp(e*)g|svg|gif)$/,
-                use: ["file-loader"],
-            },
             {
                 test: /\.svg$/,
                 use:['@svgr/webpack'],
