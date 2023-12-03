@@ -92,7 +92,10 @@ function UefaClubs(){
     // Group clubs by the "Country" attribute
     const groupedArray = rankings.reduce((acc, member) => {
         const { Country, ...rest } = member;
-        if (member.Position <= 100){
+
+        // IMPORTANT – the number of clubs to display on map (should make a slider for this)
+        // tooltip feature is still missing
+        if (member.Position <= 100){ 
             // Check if the country key already exists in the accumulator
             if (!acc[Country]) {
                 // If not, create a new key with an array containing the current member
