@@ -28,6 +28,27 @@ module.exports = {
                 use: ["style-loader", "css-loader"],
             },
             {
+                test: /\.html$/,
+                use: ['html-loader'],
+            },
+            {
+                test: /\.csv$/,
+                use: ['csv-loader'],
+            },
+            {
+                test: /\.(png|jpe?g|gif|svg)$/i,
+                use: [
+                  {
+                    loader: 'file-loader',
+                    options: {
+                      limit: 8192, // Convert images < 8kb to base64 strings
+                      name: '[name].[ext]',
+                      outputPath: 'images', // Output path for images (relative to the output directory)
+                    },
+                  },
+                ],
+              },
+            {
                 test: /\.(png|jp(e*)g|svg|gif)$/,
                 use: ["file-loader"],
             },

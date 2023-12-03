@@ -17,6 +17,11 @@ const mapUrl = 'https://raw.githubusercontent.com/leakyMirror/map-of-europe/mast
 // The mapping between fifa country codes and the country names
 const codesUrl = 'https://gist.githubusercontent.com/danysigha/774a124bc279c56ed4323802dafd6445/raw/200692a0c0941e3c8086fb94e9a3436f131cd337/fifa_codes.csv'; 
 
+// logos of european clubs - csv of file name (club name) --> logo path mappings  
+const logosUrl = "https://gist.githubusercontent.com/danysigha/94022b90211d99126d5b3cf3eabe3278/raw/c09de7f7db821aef4bc73fdec584be150c03c7c3/clublogos.csv";
+
+
+// table with the clubs and their ranking in Champions League
 function useRankingsData(csvPath){
     const [dataAll, setData] = React.useState(null);
     React.useEffect(() => {
@@ -37,6 +42,7 @@ function useRankingsData(csvPath){
     return dataAll;
 }
 
+// the table with Fifa code to country name mappings
 function useFifaData(csvPath){
     const [dataAll, setData] = React.useState(null);
     React.useEffect(() => {
@@ -47,6 +53,7 @@ function useFifaData(csvPath){
     return dataAll;
 }
 
+// the funciton to display the map of Europe
 function useMap(jsonPath) {
     const [data, setData] = React.useState(null);
     React.useEffect(() => {
@@ -57,12 +64,26 @@ function useMap(jsonPath) {
     return data;
 }
 
+// function to read the club name --> logo path mappings
+function useClubLogos(csvPath){
+    const [dataAll, setData] = React.useState(null);
+    React.useEffect(() => {
+        csv(csvPath).then(data => {
+            setData(data);
+        });
+    }, []);
+    return dataAll;
+}
 
+// the function to display the points on the map
 function UefaClubs(){
     const map_height = 700;
     const rankings = useRankingsData(csvUrl);
     const fifa_codes = useFifaData(codesUrl);
+    const clubLogos = useClubLogos(logosUrl);
+
     const map = useMap(mapUrl);
+    
 
     if (!map || !rankings) {
         return <pre>Loading...</pre>;
@@ -84,10 +105,14 @@ function UefaClubs(){
         return acc;
     }, {});
 
+
     // Convert the grouped data into an array of key-value pairs
+    // the keys are Fifa country codes
     const groupedClubs = Object.entries(groupedArray);
+    // console.log(groupedClubs);
 
 
+    // map fifa codes to country names
     const code_country_map = fifa_codes.reduce((acc, member) => {
         const { FIFA, CLDR_display_name } = member;
         
@@ -95,6 +120,7 @@ function UefaClubs(){
         if (!acc[FIFA]) {
             if (FIFA == "ENG,NIR,SCO,WAL"){
                 acc["ENG"] = "United Kingdom";
+                acc["SCO"] = "United Kingdom";
                 acc["NIR"] = "Ireland";
                 acc["WAL"] = "Wales";
                 acc["CZE"] = "Czech Republic";
@@ -106,49 +132,40 @@ function UefaClubs(){
         return acc;
     }, {});
 
-    const club_country_pairs = [];
-    // create an array of club and country pairs (ie. Spain appears more than once)
-    for (const [key, value] of Object.entries(groupedClubs)) {
-        var club_fifa_code = value[0];
-        var clubs = value[1];
-        
-        if(code_country_map[club_fifa_code]){
-            for (var club in clubs){
-                var club_name = clubs[club]["Club"];
-                club_country_pairs.push( { "country": code_country_map[value[0]], "club":club_name } );
+
+    
+    // new object with country names as keys and array of club names as values
+    const newGroupedClubs = {};
+
+    for (const [index, [clubFifaCode, clubs]] of Object.entries(groupedClubs)) {
+        if (code_country_map[clubFifaCode]) {
+            const countryKey = code_country_map[clubFifaCode];
+    
+            if (newGroupedClubs[countryKey]) {
+                // Country key already exists, push clubs
+                clubs.forEach(e => {
+                    newGroupedClubs[countryKey].push(e["Club"]);
+                });
+            } else {
+                // Create a new array for the country key
+                newGroupedClubs[countryKey] = clubs.map(e => e["Club"]);
             }
         }
     }
+    // console.log(newGroupedClubs);
+    
 
-    // create an array of objects with country names their longitudes and their lattitudes FOR EACH CLUB
-    const longitudes_lattitudes = [];
-
-    map["features"].forEach( (element) =>{
-        if (element.hasOwnProperty("properties")) {
-            var country = element["properties"]["NAME"];
-            var lon = element["properties"]["LON"];
-            var lat = element["properties"]["LAT"];
-
-            club_country_pairs.forEach( (element) =>{
-                if (country.includes(element["country"])){
-                    longitudes_lattitudes.push( {"country": country, "longitude":lon, "latitude":lat});
-                }
-            })
-        }
-    }) 
-
-    // console.log(longitudes_lattitudes);
-
+    // need to add a header indicating that the map is Europe
     return <div>
         <h1>UEFA CHAMPIONS LEAGUE – a visual narrative</h1>   
+        
         <div className={"mainView"}>
             
             <div className="full-width-container">
                 
                 <svg id={"map"} height={map_height} width={window.innerWidth/2}>
-                    <ClubMap width={window.innerWidth/3} height={map_height} countries={map} 
-                    selectedCountries={longitudes_lattitudes}
-                    />
+                    <ClubMap width={window.innerWidth/2} height={map_height} map={map} 
+                    clubs={newGroupedClubs} logos={clubLogos} />
                 </svg>
 
             </div>
